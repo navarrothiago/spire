@@ -84,3 +84,5 @@ require (
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 	sigs.k8s.io/controller-runtime v0.6.0
 )
+
+replace github.com/spiffe/spire-api-sdk => github.com/kinvolk/spire-api-sdk v1.0.0-pre.0.20210628133559-6fd689f7c71c
