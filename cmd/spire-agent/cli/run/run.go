@@ -70,6 +70,8 @@ type agentConfig struct {
 	TrustDomain                   string    `hcl:"trust_domain"`
 	AllowUnauthenticatedVerifiers bool      `hcl:"allow_unauthenticated_verifiers"`
 
+	AuthorizedUsersDelegationApi []string `hcl:"authorized_users_delegation_api"`
+
 	ConfigPath string
 	ExpandEnv  bool
 
@@ -422,6 +424,8 @@ func NewAgentConfig(c *Config, logOptions []log.Option, allowUnknownConfig bool)
 	}
 
 	ac.AllowUnauthenticatedVerifiers = c.Agent.AllowUnauthenticatedVerifiers
+
+	ac.AuthorizedUsersDelegationApi = c.Agent.AuthorizedUsersDelegationApi
 
 	return ac, nil
 }

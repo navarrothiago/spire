@@ -14,6 +14,7 @@ import (
 	api_workload "github.com/spiffe/spire/api/workload"
 	admin_api "github.com/spiffe/spire/pkg/agent/api"
 	node_attestor "github.com/spiffe/spire/pkg/agent/attestor/node"
+	attestor "github.com/spiffe/spire/pkg/agent/attestor/workload"
 	workload_attestor "github.com/spiffe/spire/pkg/agent/attestor/workload"
 	"github.com/spiffe/spire/pkg/agent/catalog"
 	"github.com/spiffe/spire/pkg/agent/endpoints"
@@ -98,7 +99,14 @@ func (a *Agent) Run(ctx context.Context) error {
 	}
 
 	if a.c.AdminBindAddress != nil {
-		adminEndpoints := a.newAdminEndpoints(manager)
+		// TODO(Mauricio): Avoid creating two different instances of the workload attestor
+		attestor := workload_attestor.New(&workload_attestor.Config{
+			Catalog: cat,
+			Log:     a.c.Log.WithField(telemetry.SubsystemName, telemetry.WorkloadAttestor),
+			Metrics: metrics,
+		})
+
+		adminEndpoints := a.newAdminEndpoints(manager, attestor, a.c.AuthorizedUsersDelegationApi)
 		tasks = append(tasks, adminEndpoints.ListenAndServe)
 	}
 
@@ -221,13 +229,15 @@ func (a *Agent) newEndpoints(cat catalog.Catalog, metrics telemetry.Metrics, mgr
 	})
 }
 
-func (a *Agent) newAdminEndpoints(mgr manager.Manager) admin_api.Server {
+func (a *Agent) newAdminEndpoints(mgr manager.Manager, attestor attestor.Attestor, AuthorizedUsersDelegationApi []string) admin_api.Server {
 	config := &admin_api.Config{
-		BindAddr:    a.c.AdminBindAddress,
-		Manager:     mgr,
-		Log:         a.c.Log.WithField(telemetry.SubsystemName, telemetry.DebugAPI),
-		TrustDomain: a.c.TrustDomain,
-		Uptime:      uptime.Uptime,
+		BindAddr:                     a.c.AdminBindAddress,
+		Manager:                      mgr,
+		Log:                          a.c.Log.WithField(telemetry.SubsystemName, telemetry.DebugAPI),
+		TrustDomain:                  a.c.TrustDomain,
+		Uptime:                       uptime.Uptime,
+		Attestor:                     attestor,
+		AuthorizedUsersDelegationApi: AuthorizedUsersDelegationApi,
 	}
 
 	return admin_api.New(config)

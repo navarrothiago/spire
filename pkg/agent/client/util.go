@@ -72,5 +72,7 @@ func slicedEntryFromProto(e *types.Entry) (*common.RegistrationEntry, error) {
 		FederatesWith:  federatesWith,
 		RevisionNumber: e.RevisionNumber,
 		Selectors:      selectors,
+		Admin:          e.Admin,
+		Downstream:     e.Downstream,
 	}, nil
 }
