@@ -263,6 +263,18 @@ func (s *Service) FetchX509Bundles(req *delegationv1.FetchX509BundlesRequest, st
 
 	subscriber := s.manager.SubscribeToBundleChanges()
 
+	// send initial update....
+	for td, bundle := range subscriber.Value() {
+		resp := &delegationv1.FetchX509BundlesResponse{
+			TrustDomainName: td.IDString(),
+			Bundle:          marshalBundle(bundle.RootCAs()),
+		}
+
+		if err := stream.Send(resp); err != nil {
+			return err
+		}
+	}
+
 	for {
 		select {
 		case <-subscriber.Changes():
